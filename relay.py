@@ -94,6 +94,7 @@ def comperve(state):
     out = {"ok": False, "entries": [], "news": []}
     try:
         h = get("https://www.comperve.ufrn.br/conteudo/concursos.php", 40)
+        log("comperve: html", len(h), "chars; 'informacoes.php' x", h.count("informacoes.php"), "| trecho:", re.sub(r"\s+"," ",h[h.find("informacoes.php")-200:h.find("informacoes.php")+40]) if "informacoes.php" in h else h[:200].replace("\n"," "))
         seen = set()
         for m in re.finditer(r'<a[^>]+href=["\']([^"\']*?concursos/([^"\']+?)/informacoes\.php[^"\']*)["\'][^>]*>(.*?)</a>', h, re.S | re.I):
             t = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", m.group(3)))).strip()
@@ -133,6 +134,7 @@ def aocp(state):
             log("aocp:", pg, e.code); continue
         except Exception as e:
             log("aocp falhou:", e); continue
+        log("aocp:", pg, len(h), "chars; '/concursos/' x", h.count("/concursos/"), "| ex:", re.findall(r'href="([^"]*/concursos/\d+[^"]*)"', h)[:3])
         for m in re.finditer(r'<a[^>]+href=["\']([^"\']*/concursos?/[^"\']+)["\'][^>]*>(.*?)</a>', h, re.S | re.I):
             l = m.group(1)
             if "/status/" in l or l in seen: continue
