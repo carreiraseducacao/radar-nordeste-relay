@@ -94,7 +94,6 @@ def comperve(state):
     out = {"ok": False, "entries": [], "news": []}
     try:
         h = get("https://www.comperve.ufrn.br/conteudo/concursos.php", 40)
-        log("comperve: html", len(h), "chars; 'informacoes.php' x", h.count("informacoes.php"), "| trecho:", re.sub(r"\s+"," ",h[h.find("informacoes.php")-200:h.find("informacoes.php")+40]) if "informacoes.php" in h else h[:200].replace("\n"," "))
         seen = set()
         for m in re.finditer(r'<a[^>]+href=["\']([^"\']*?concursos/([^"\']+?)/informacoes\.php[^"\']*)["\'][^>]*>(.*?)</a>', h, re.S | re.I):
             t = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", m.group(3)))).strip()
@@ -123,28 +122,23 @@ def comperve(state):
         log("comperve home falhou:", e)
     return out
 
-# ---------------------------------------------------------------- AOCP (best effort)
+# ---------------------------------------------------------------- AOCP (API JSON descoberta em 20/09/2026)
+NE_RE = re.compile(r"\b(CE|PE|PB|RN|AL|BA|MA|PI|SE)\b|CEAR[ÁA]|PERNAMBUC|PARA[ÍI]BA|RIO GRANDE DO NORTE|ALAGOAS|BAHIA|MARANH|PIAU|SERGIPE", re.I)
 def aocp(state):
     out = {"ok": False, "entries": []}
-    seen = set()
-    for pg in ("https://www.institutoaocp.org.br/concursos/status/novos", "https://www.institutoaocp.org.br/concursos/status/inscricoes"):
-        try:
-            h = get(pg, 40)
-        except urllib.error.HTTPError as e:
-            log("aocp:", pg, e.code); continue
-        except Exception as e:
-            log("aocp falhou:", e); continue
-        log("aocp:", pg, len(h), "chars; '/concursos/' x", h.count("/concursos/"), "| ex:", re.findall(r'href="([^"]*/concursos/\d+[^"]*)"', h)[:3])
-        for m in re.finditer(r'<a[^>]+href=["\']([^"\']*/concursos?/[^"\']+)["\'][^>]*>(.*?)</a>', h, re.S | re.I):
-            l = m.group(1)
-            if "/status/" in l or l in seen: continue
-            t = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", m.group(2)))).strip()
-            if len(t) < 8: continue
-            seen.add(l)
-            link = l if l.startswith("http") else "https://www.institutoaocp.org.br" + l
-            out["entries"].append({"id": re.sub(r"\W+", "-", l)[-70:], "titulo": t[:220], "link": link})
+    try:
+        j = json.loads(get("https://www.institutoaocp.org.br/api/concursos", 40))
+    except Exception as e:
+        log("aocp api falhou:", e); return out
+    for c in j if isinstance(j, list) else j.get("data", []):
+        nome = c.get("nome") or ""; chamada = c.get("chamada") or ""
+        if not NE_RE.search(nome + " " + chamada): continue
+        out["entries"].append({"id": str(c.get("id")), "titulo": (nome + " — " + chamada)[:260],
+                               "link": f"https://www.institutoaocp.org.br/concursos/{c.get('id')}",
+                               "status": c.get("status"), "dataInscricao": c.get("dataInscricao"), "dataProva": c.get("dataProva"),
+                               "vagas": c.get("vagas"), "tipo": c.get("tipoProcesso")})
     out["ok"] = True
-    log("aocp: entradas", len(out["entries"]))
+    log("aocp: entradas NE", len(out["entries"]), "de", len(j) if isinstance(j, list) else "?")
     return out
 
 def main():
