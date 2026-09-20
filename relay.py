@@ -95,9 +95,9 @@ def comperve(state):
     try:
         h = get("https://www.comperve.ufrn.br/conteudo/concursos.php", 40)
         seen = set()
-        for m in re.finditer(r'<a[^>]+href="([^"]*?/conteudo/concursos/([^/"]+)/informacoes\.php)"[^>]*>(.*?)</a>', h, re.S | re.I):
+        for m in re.finditer(r'<a[^>]+href="([^"]*?/conteudo/concursos/([^"]+?)/informacoes\.php)"[^>]*>(.*?)</a>', h, re.S | re.I):
             t = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", m.group(3)))).strip()
-            slug = m.group(2)
+            slug = m.group(2).strip("/").replace("/", "_")
             if not t or slug in seen: continue
             seen.add(slug)
             link = m.group(1) if m.group(1).startswith("http") else "https://www.comperve.ufrn.br" + m.group(1)
@@ -108,10 +108,14 @@ def comperve(state):
         log("comperve lista falhou:", e)
     try:
         h = get("https://www.comperve.ufrn.br/", 40)
-        txt = re.sub(r"<[^>]+>", "\n", h); txt = html.unescape(txt)
-        for m in re.finditer(r"(\d{2}/\d{2}/\d{4}) \d{2}:\d{2} - ([^\n]{10,200})\n+\s*([^\n]{10,600})", txt):
-            out["news"].append({"data": m.group(1), "titulo": m.group(2).strip(), "texto": m.group(3).strip()[:500]})
-            if len(out["news"]) >= 30: break
+        # <strong class="titulo_noticia">DD/MM/AAAA HH:MM - TÍTULO</strong> <p class="texto_noticia"><a href="LINK">TEXTO</a></p>
+        for m in re.finditer(r'<strong[^>]*titulo_noticia[^>]*>\s*(\d{2}/\d{2}/\d{4}) \d{2}:\d{2} -\s*(.*?)</strong>\s*<p[^>]*>\s*(?:<a[^>]+href="([^"]*)"[^>]*>)?(.*?)(?:</a>)?\s*</p>', h, re.S | re.I):
+            tit = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", m.group(2)))).strip()
+            txt = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", m.group(4)))).strip()
+            link = m.group(3) or ""
+            if link and not link.startswith("http"): link = "https://www.comperve.ufrn.br" + link
+            out["news"].append({"data": m.group(1), "titulo": tit[:200], "texto": txt[:500], "link": link})
+            if len(out["news"]) >= 40: break
         log("comperve: notícias", len(out["news"]))
     except Exception as e:
         log("comperve home falhou:", e)
