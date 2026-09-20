@@ -95,12 +95,13 @@ def comperve(state):
     try:
         h = get("https://www.comperve.ufrn.br/conteudo/concursos.php", 40)
         seen = set()
-        for m in re.finditer(r'<a[^>]+href="([^"]*?/conteudo/concursos/([^"]+?)/informacoes\.php)"[^>]*>(.*?)</a>', h, re.S | re.I):
+        for m in re.finditer(r'<a[^>]+href=["\']([^"\']*?concursos/([^"\']+?)/informacoes\.php[^"\']*)["\'][^>]*>(.*?)</a>', h, re.S | re.I):
             t = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", m.group(3)))).strip()
             slug = m.group(2).strip("/").replace("/", "_")
             if not t or slug in seen: continue
             seen.add(slug)
-            link = m.group(1) if m.group(1).startswith("http") else "https://www.comperve.ufrn.br" + m.group(1)
+            l = m.group(1)
+            link = l if l.startswith("http") else ("https://www.comperve.ufrn.br" + (l if l.startswith("/") else "/conteudo/" + l))
             out["entries"].append({"id": slug, "titulo": t[:220], "link": link})
         out["ok"] = True
         log("comperve: entradas", len(out["entries"]))
@@ -124,19 +125,22 @@ def comperve(state):
 # ---------------------------------------------------------------- AOCP (best effort)
 def aocp(state):
     out = {"ok": False, "entries": []}
-    try:
-        h = get("https://www.institutoaocp.org.br/", 40)
-    except urllib.error.HTTPError as e:
-        log("aocp:", e.code); return out
-    except Exception as e:
-        log("aocp falhou:", e); return out
     seen = set()
-    for m in re.finditer(r'<a[^>]+href="([^"]*concurso[^"]*)"[^>]*>(.*?)</a>', h, re.S | re.I):
-        t = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", m.group(2)))).strip()
-        if len(t) < 8 or m.group(1) in seen: continue
-        seen.add(m.group(1))
-        link = m.group(1) if m.group(1).startswith("http") else "https://www.institutoaocp.org.br" + m.group(1)
-        out["entries"].append({"id": re.sub(r"\W+", "-", m.group(1))[-60:], "titulo": t[:220], "link": link})
+    for pg in ("https://www.institutoaocp.org.br/concursos/status/novos", "https://www.institutoaocp.org.br/concursos/status/inscricoes"):
+        try:
+            h = get(pg, 40)
+        except urllib.error.HTTPError as e:
+            log("aocp:", pg, e.code); continue
+        except Exception as e:
+            log("aocp falhou:", e); continue
+        for m in re.finditer(r'<a[^>]+href=["\']([^"\']*/concursos?/[^"\']+)["\'][^>]*>(.*?)</a>', h, re.S | re.I):
+            l = m.group(1)
+            if "/status/" in l or l in seen: continue
+            t = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", m.group(2)))).strip()
+            if len(t) < 8: continue
+            seen.add(l)
+            link = l if l.startswith("http") else "https://www.institutoaocp.org.br" + l
+            out["entries"].append({"id": re.sub(r"\W+", "-", l)[-70:], "titulo": t[:220], "link": link})
     out["ok"] = True
     log("aocp: entradas", len(out["entries"]))
     return out
