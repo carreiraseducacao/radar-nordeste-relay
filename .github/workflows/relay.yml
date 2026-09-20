@@ -1,0 +1,24 @@
+name: relay
+on:
+  schedule:
+    - cron: "17 */2 * * *"     # a cada 2h (UTC); o GitHub atrasa schedules, tudo bem
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: relay
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: poppler (pdftotext)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils >/dev/null
+      - name: run relay
+        run: python3 relay.py
+      - name: commit data
+        run: |
+          git config user.name "radar-relay"
+          git config user.email "radar-relay@users.noreply.github.com"
+          git add data/relay.json data/relay_state.json
+          git diff --cached --quiet && echo "sem mudanças" || git commit -m "relay $(date -u +%Y-%m-%dT%H:%M)Z" && git push
