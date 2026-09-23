@@ -141,10 +141,41 @@ def aocp(state):
     log("aocp: entradas NE", len(out["entries"]), "de", len(j) if isinstance(j, list) else "?")
     return out
 
+# ---------------------------------------------------------------- PÁGINAS genéricas (sites que bloqueiam o Hostinger) — 23/09/2026
+PAGINAS = [
+    {"id": "seedf_home", "url": "https://www.educacao.df.gov.br/", "ente": "SEEDF", "label": "site SEEDF (concurso 10.604 vagas; banca em contratação)",
+     "filtro": r"CONCURSO P[ÚU]BLICO|EDITAL[^.]{0,80}(PROFESSOR|CONCURSO)|BANCA (ORGANIZADORA|EXAMINADORA)|PROFESSOR[^.]{0,60}CONCURSO"},
+    {"id": "seedf_concurso", "url": "https://www.educacao.df.gov.br/concurso-publico/", "ente": "SEEDF", "label": "SEEDF — página de concurso público",
+     "filtro": r"CONCURSO|EDITAL|BANCA|INSCRI|PROFESSOR"},
+]
+def paginas(state):
+    out = []
+    for pg in PAGINAS:
+        try:
+            h = get(pg["url"], 40)
+        except Exception as e:
+            log(f"pagina {pg['id']} falhou:", e); out.append({**pg, "ok": False}); continue
+        h2 = re.sub(r"<(script|style|nav|footer)\b.*?</\1>", " ", h, flags=re.S | re.I)
+        txt = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", h2))).strip()
+        fr = []
+        for f in re.split(r"(?<=[.!?;:])\s+", txt):
+            f = f.strip()
+            if len(f) > 12 and re.search(pg["filtro"], f, re.I): fr.append(f[:300])
+        links = []
+        for m in re.finditer(r'<a[^>]+href=["\']([^"\']+)["\'][^>]*>(.*?)</a>', h, re.S | re.I):
+            u = html.unescape(m.group(1)); rot = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", m.group(2)))).strip()
+            if not re.search(r"\.pdf|edital|concurso|inscri", u + " " + rot, re.I): continue
+            if not u.startswith("http"): u = re.sub(r"^(https?://[^/]+).*$", r"\1", pg["url"]) + (u if u.startswith("/") else "/" + u)
+            links.append({"rot": rot[:150], "url": u})
+            if len(links) >= 60: break
+        out.append({**pg, "ok": True, "frases": list(dict.fromkeys(fr))[:200], "links": links})
+        log(f"pagina {pg['id']}: {len(fr)} frase(s), {len(links)} link(s)")
+    return out
+
 def main():
     state = load(STATE, {})
     res = {"generated_at": datetime.now(timezone.utc).isoformat(), "famem": famem(state),
-           "comperve": comperve(state), "aocp": aocp(state)}
+           "comperve": comperve(state), "aocp": aocp(state), "paginas": paginas(state)}
     # mantém as últimas 5 edições da FAMEM publicadas (o PHP marca o que já leu)
     prev = load(OUT, {})
     old = [e for e in prev.get("famem", {}).get("edicoes", []) if e["edicao"] not in {x["edicao"] for x in res["famem"]["edicoes"]}]
