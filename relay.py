@@ -132,7 +132,7 @@ def aocp(state):
         log("aocp api falhou:", e); return out
     for c in j if isinstance(j, list) else j.get("data", []):
         nome = c.get("nome") or ""; chamada = c.get("chamada") or ""
-        if not NE_RE.search(nome + " " + chamada): continue
+        # 30/09/2026: cobertura NACIONAL — sem filtro de região (o PHP filtra por UF/educação)
         out["entries"].append({"id": str(c.get("id")), "titulo": (nome + " — " + chamada)[:260],
                                "link": f"https://www.institutoaocp.org.br/concursos/{c.get('id')}",
                                "status": c.get("status"), "dataInscricao": c.get("dataInscricao"), "dataProva": c.get("dataProva"),
