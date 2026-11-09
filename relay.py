@@ -141,6 +141,45 @@ def aocp(state):
     log("aocp: entradas NE", len(out["entries"]), "de", len(j) if isinstance(j, list) else "?")
     return out
 
+# ---------------------------------------------------------------- VUNESP (09/11/2026)
+# O site da VUNESP fica atrás do Akamai: urllib/curl levam 403 até de IP residencial. curl_cffi imitando o Chrome passa.
+# Lê as listas Próximos / Inscrições abertas / Em andamento (códigos tipo PJAN2601) e o <title> de cada projeto novo
+# ("Concurso Público - 1/2026 | Prefeitura de Jandira"); marca se a página cita professor (o PHP trata como urgente).
+def vunesp(state):
+    out = {"ok": False, "entries": []}
+    try:
+        from curl_cffi import requests as cr
+        s = cr.Session(impersonate="chrome")
+    except Exception as e:
+        log("vunesp: curl_cffi indisponível:", e); return out
+    cache = state.setdefault("vunesp_proj", {})
+    codes = {}
+    for st, path in [("PROXIMO", "proximo"), ("INSCRICOES ABERTAS", "inscricoes%20abertas"), ("EM ANDAMENTO", "em%20andamento")]:
+        try:
+            h = s.get(f"https://www.vunesp.com.br/busca/concurso/{path}", timeout=30).text
+        except Exception as e:
+            log("vunesp lista", path, "falhou:", e); continue
+        for c in re.findall(r'href="/([A-Z]{3,5}\d{4})"', h): codes.setdefault(c, st)
+    if not codes:
+        log("vunesp: nenhuma lista respondeu"); return out
+    for c, st in codes.items():
+        info = cache.get(c)
+        if not info:
+            try:
+                p = s.get(f"https://www.vunesp.com.br/{c}", timeout=30).text
+                m = re.search(r"<title>(.*?)</title>", p, re.S)
+                tit = re.sub(r"\s+", " ", html.unescape(m.group(1))).strip() if m else c
+                txt = re.sub(r"\s+", " ", html.unescape(re.sub(r"<script.*?</script>|<style.*?</style>|<[^>]+>", " ", p, flags=re.S)))
+                prof = len(re.findall(r"PROFESSOR|PEDAGOG|MAGIST", txt, re.I))
+                info = {"t": tit, "prof": prof}; cache[c] = info; time.sleep(1)
+            except Exception as e:
+                log("vunesp projeto", c, "falhou:", e); info = {"t": c, "prof": 0}
+        tit = info["t"] + (f" · cita PROFESSOR/MAGISTÉRIO {info['prof']}x" if info.get("prof") else "")
+        out["entries"].append({"id": c, "titulo": tit[:260], "link": f"https://www.vunesp.com.br/{c}", "status": st})
+    out["ok"] = True
+    log("vunesp:", len(out["entries"]), "projetos")
+    return out
+
 # ---------------------------------------------------------------- PÁGINAS genéricas (sites que bloqueiam o Hostinger) — 23/09/2026
 PAGINAS = [
     {"id": "seedf_home", "url": "https://www.educacao.df.gov.br/", "ente": "SEEDF", "label": "site SEEDF (concurso 10.604 vagas; banca em contratação)",
@@ -175,7 +214,7 @@ def paginas(state):
 def main():
     state = load(STATE, {})
     res = {"generated_at": datetime.now(timezone.utc).isoformat(), "famem": famem(state),
-           "comperve": comperve(state), "aocp": aocp(state), "paginas": paginas(state)}
+           "comperve": comperve(state), "aocp": aocp(state), "vunesp": vunesp(state), "paginas": paginas(state)}
     # mantém as últimas 5 edições da FAMEM publicadas (o PHP marca o que já leu)
     prev = load(OUT, {})
     old = [e for e in prev.get("famem", {}).get("edicoes", []) if e["edicao"] not in {x["edicao"] for x in res["famem"]["edicoes"]}]

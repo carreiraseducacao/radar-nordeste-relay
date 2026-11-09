@@ -1,7 +1,7 @@
 name: relay
 on:
   schedule:
-    - cron: "17 */2 * * *"     # a cada 2h (UTC); o GitHub atrasa schedules, tudo bem
+    - cron: "17 * * * *"       # 09/11: de hora em hora (VUNESP/AOCP); o GitHub atrasa schedules, tudo bem
   workflow_dispatch:
 permissions:
   contents: write
@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: poppler (pdftotext)
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils >/dev/null
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils >/dev/null && pip install -q curl_cffi
       - name: run relay
         run: python3 relay.py
       - name: commit data
