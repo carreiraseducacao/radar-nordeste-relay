@@ -1,3 +1,77 @@
 {
- "famem_last": 3974
+ "famem_last": 3974,
+ "vunesp_proj": {
+  "FSJO2601": {
+   "t": "Processo Seletivo - Residência Médica | Hospital e Maternidade Santa Joana S/A - Fac Santa Joana",
+   "prof": 0
+  },
+  "SEAB2601": {
+   "t": "Concurso Público - Pesquisador Científico I | Instituto de Pesquisas Ambientais/SP",
+   "prof": 0
+  },
+  "PJAN2601": {
+   "t": "Concurso Público - 1/2026 | Prefeitura de Jandira",
+   "prof": 0
+  },
+  "PGUA2501": {
+   "t": "Concurso Público 1/2026 | Prefeitura de Guaratinguetá",
+   "prof": 1
+  },
+  "IPJU2601": {
+   "t": "Concurso Público - IPREJUN | Instituto de Previdência de Jundiaí",
+   "prof": 0
+  },
+  "PJAN2604": {
+   "t": "Edital 4/2026 - Secretaria da Educação | Prefeitura de Jandira",
+   "prof": 3
+  },
+  "PMES2603": {
+   "t": "Concurso Público - Aluno-Soldado PM | Polícia Militar/SP",
+   "prof": 0
+  },
+  "TJSP2602": {
+   "t": "Concurso Público - Oficial de Justiça | Tribunal de Justiça / SP",
+   "prof": 0
+  },
+  "TJSP2607": {
+   "t": "Concurso Público - Escrevente | Tribunal de Justiça / SP",
+   "prof": 0
+  },
+  "TRFT2601": {
+   "t": "Concurso Público - Vários Cargos | Tribunal Regional Federal da 3ª Região",
+   "prof": 0
+  },
+  "UNIP2602": {
+   "t": "Processo Seletivo - Residência Médica 2027 | UNIVERSIDADE PAULISTA - UNIP",
+   "prof": 0
+  },
+  "FMCA2604": {
+   "t": "Unifipa/Fameca - Residência Médica 2027 | Centro Universitário Padre Albino",
+   "prof": 0
+  },
+  "PMES2601": {
+   "t": "Aluno-Soldado PM do Quadro de Praças (QP) | Polícia Militar/SP",
+   "prof": 0
+  },
+  "SESA2601": {
+   "t": "Programa de Residência Médica de 2027 | Secretaria de Estado da Saúde/SP",
+   "prof": 0
+  },
+  "TJSP2503": {
+   "t": "Concurso Público - Escrevente | Tribunal de Justiça / SP",
+   "prof": 0
+  },
+  "PMES2502": {
+   "t": "Concurso Público - Soldado PM 2ª Classe | Polícia Militar/SP",
+   "prof": 0
+  },
+  "FEAE2603": {
+   "t": "Processo Seletivo - Residência Médica 2027 | Einstein Hospital Israelita",
+   "prof": 0
+  },
+  "TCSP2501": {
+   "t": "Auditor de Controle Externo - DIPE | Tribunal de Contas/SP",
+   "prof": 0
+  }
+ }
 }
