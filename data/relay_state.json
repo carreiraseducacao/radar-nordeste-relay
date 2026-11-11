@@ -1,5 +1,5 @@
 {
- "famem_last": 3975,
+ "famem_last": 3976,
  "vunesp_proj": {
   "FSJO2601": {
    "t": "Processo Seletivo - Residência Médica | Hospital e Maternidade Santa Joana S/A - Fac Santa Joana",
@@ -83,6 +83,10 @@
   },
   "BOSO2602": {
    "t": "Residência Médica 2027(Oftalmo e Otorrino) | Hospital Oftalmológico de Sorocaba",
+   "prof": 0
+  },
+  "PCAM2602": {
+   "t": "Concurso Público - Guarda Municipal | Prefeitura de Campinas",
    "prof": 0
   }
  }
