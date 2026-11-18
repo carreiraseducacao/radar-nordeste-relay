@@ -1,5 +1,5 @@
 {
- "famem_last": 3980,
+ "famem_last": 3981,
  "vunesp_proj": {
   "FSJO2601": {
    "t": "Processo Seletivo - Residência Médica | Hospital e Maternidade Santa Joana S/A - Fac Santa Joana",
@@ -91,6 +91,10 @@
   },
   "UNPP2603": {
    "t": "Mestrado Profissional em Educação Física | UNESP Presidente Prudente",
+   "prof": 0
+  },
+  "PMJU2606": {
+   "t": "Concurso Público - Edital 302/26 - Área da Saúde | Prefeitura de Jundiaí",
    "prof": 0
   }
  }
